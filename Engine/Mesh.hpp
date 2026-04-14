@@ -42,7 +42,8 @@ public:
 		cmdList->DrawIndexedInstanced(m_IndexCount, 1, 0, 0, 0);
 	}
 
-	const AABB&     GetAABB()          const noexcept { return m_AABB; }
+	// Mesh data needed in Brixelizer.
+	AABB const&     GetAABB()          const noexcept { return m_AABB; }
 	ID3D12Resource* GetVertexBuffer()  const noexcept { return m_VertexBuffer.Get(); }
 	ID3D12Resource* GetIndexBuffer()   const noexcept { return m_IndexBuffer.Get(); }
 	UINT            GetVertexCount()   const noexcept { return m_VertexCount; }
@@ -58,8 +59,8 @@ private:
 		auto const heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto const resDesc   = CD3DX12_RESOURCE_DESC::Buffer(dataSize);
 
-		// Usamos D3D12_RESOURCE_STATE_GENERIC_READ para buffers de carga (Upload)
-		// El Debug Layer a veces marca error si se usa otro estado en este tipo de heap
+		// We use D3D12_RESOURCE_STATE_GENERIC_READ for upload buffers (Upload heap)
+		// The Debug Layer may sometimes report an error if another state is used for this type of heap.
 		device->CreateCommittedResource(
 			&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
@@ -83,9 +84,13 @@ private:
 		auto const resDesc   = CD3DX12_RESOURCE_DESC::Buffer(dataSize);
 
 		device->CreateCommittedResource(
-			&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-			IID_PPV_ARGS(&m_IndexBuffer));
+			&heapProps, 
+			D3D12_HEAP_FLAG_NONE, 
+			&resDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, 
+			nullptr, // pOptimizedClearValue.
+			IID_PPV_ARGS(&m_IndexBuffer)
+		);
 
 		void* mapped = nullptr;
 		m_IndexBuffer->Map(0, nullptr, &mapped);
@@ -107,8 +112,8 @@ private:
 
 		for (auto const& vertex : vertices) {
 			for (int i = 0; i < 3; ++i) {
-				m_AABB.min[i] = (std::min)(m_AABB.min[i], vertex.position[i]);
-				m_AABB.max[i] = (std::max)(m_AABB.max[i], vertex.position[i]);
+				m_AABB.min[i] = std::min(m_AABB.min[i], vertex.position[i]);
+				m_AABB.max[i] = std::max(m_AABB.max[i], vertex.position[i]);
 			}
 		}
 	}

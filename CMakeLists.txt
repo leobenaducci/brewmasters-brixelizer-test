@@ -10,21 +10,28 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 
-# --- CONFIGURACIÓN DE RUTAS ---
 set(FFX_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Engine/Plugins/FidelityFX")
 
-# --- ASSIMP ---
+# Assimp (minimal).
 FetchContent_Declare(
     assimp
     GIT_REPOSITORY https://github.com/assimp/assimp.git
-    GIT_TAG v6.0.4
+    GIT_TAG v5.3.1
 )
+
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
+
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(assimp)
 
-# --- IMGUI ---
+# ImGui.
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -49,26 +56,21 @@ set(ALL_SOURCES ${APP_SOURCES} ${ENGINE_SOURCES})
 add_compile_definitions(dx12engine NOMINMAX)
 add_executable(dx12engine ${ALL_SOURCES} ${IMGUI_SOURCES})
 
-# --- INCLUDES ---
+# Includes.
 target_include_directories(dx12engine PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/Engine
     ${imgui_SOURCE_DIR} 
     ${imgui_SOURCE_DIR}/backends
-    ${FFX_DIR}/include        # FidelityFX Headers
+    ${FFX_DIR}/include
 )
 
-# --- LÓGICA DE LIBRERÍAS FIDELITYFX (Debug vs Release) ---
-# El SDK usa sufijos 'd' para Debug y nada para Release.
-set(FFX_LIB_SUFFIX "")
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(FFX_LIB_SUFFIX "d")
-endif()
+set(FFX_LIB_SUFFIX "$<$<CONFIG:Debug>:d>")
 
 if(MSVC)
-    target_link_options(dx12engine PRIVATE /STACK:16777216)  # 16MB
+    target_link_options(dx12engine PRIVATE /STACK:16777216) # 16MB.
 endif()
 
-# --- LIBRARIES ---
+# Libraries.
 target_link_libraries(dx12engine 
     PRIVATE 
     assimp::assimp 
@@ -76,24 +78,23 @@ target_link_libraries(dx12engine
     dxgi.lib
     dxguid.lib
     d3dcompiler.lib
-    
-    # FidelityFX Libs
-    ${FFX_DIR}/lib/ffx_backend_dx12_x64${FFX_LIB_SUFFIX}.lib
-    ${FFX_DIR}/lib/ffx_brixelizer_x64${FFX_LIB_SUFFIX}.lib
-    ${FFX_DIR}/lib/ffx_brixelizergi_x64${FFX_LIB_SUFFIX}.lib
+
+    "${FFX_DIR}/lib/ffx_backend_dx12_x64${FFX_LIB_SUFFIX}.lib"
+    "${FFX_DIR}/lib/ffx_brixelizer_x64${FFX_LIB_SUFFIX}.lib"
+    "${FFX_DIR}/lib/ffx_brixelizergi_x64${FFX_LIB_SUFFIX}.lib"
 )
 
-# --- POST-BUILD (DLL & PDB Copy) ---
+# Post build (copy dll to build directory).
 add_custom_command(TARGET dx12engine POST_BUILD
-    # Copiar DLL de Assimp
+    # Assimp.
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:assimp::assimp>" $<TARGET_FILE_DIR:dx12engine>
     
-    # Copiar DLLs de FidelityFX
+    # Fidelity FX.
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FFX_DIR}/bin/ffx_backend_dx12_x64${FFX_LIB_SUFFIX}.dll" $<TARGET_FILE_DIR:dx12engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FFX_DIR}/bin/ffx_brixelizer_x64${FFX_LIB_SUFFIX}.dll" $<TARGET_FILE_DIR:dx12engine>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${FFX_DIR}/bin/ffx_brixelizergi_x64${FFX_LIB_SUFFIX}.dll" $<TARGET_FILE_DIR:dx12engine>
     
-    # Copiar PDBs (Solo en Debug para facilitar el rastreo de errores en el motor)
+    # Copy debug files if debug mode.
     COMMAND ${CMAKE_COMMAND} -E $<$<CONFIG:Debug>:copy_if_different> "${FFX_DIR}/bin/ffx_brixelizer_x64${FFX_LIB_SUFFIX}.pdb" $<TARGET_FILE_DIR:dx12engine>
     COMMAND ${CMAKE_COMMAND} -E $<$<CONFIG:Debug>:copy_if_different> "${FFX_DIR}/bin/ffx_brixelizergi_x64${FFX_LIB_SUFFIX}.pdb" $<TARGET_FILE_DIR:dx12engine>
 )

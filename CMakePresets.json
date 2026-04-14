@@ -2,25 +2,13 @@
     "version": 8,
     "configurePresets": [
         {
-            "name": "msvc-x64",
-            "displayName": "MSVC x64",
-            "description": "Sets Ninja generator, build and install directory",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_TOOLCHAIN_FILE": "",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-            }
-        },
-        {
             "name": "MSVCx64",
-            "displayName": "Visual Studio Community 2022 Release - amd64",
-            "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
+            "displayName": "Visual Studio 2022 x64",
+            "description": "MSVC clean (no vcpkg)",
             "generator": "Visual Studio 17 2022",
             "toolset": "host=x64",
             "architecture": "x64",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
             }
@@ -29,7 +17,7 @@
     "buildPresets": [
         {
             "name": "MSVCx64-debug",
-            "displayName": "Visual Studio Community 2022 Release - amd64 - Debug",
+            "displayName": "MSVC Debug",
             "configurePreset": "MSVCx64",
             "configuration": "Debug"
         }
