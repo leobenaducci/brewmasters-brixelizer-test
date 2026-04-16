@@ -18,19 +18,23 @@ static UINT16 CalculateMipLevels(UINT width, UINT height) {
 ID3D12Resource* Texture::CreateTexture(
 	ID3D12Device* device,
 	ID3D12GraphicsCommandList* cmdList,
-	const std::string& path,
+	std::string const& path,
 	Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer
 ) {
 	fs::path fullPath(path);
 	std::string pathStr = fullPath.string();
 
 	size_t objPos = pathStr.find(".obj/");
-	if (objPos == std::string::npos) objPos = pathStr.find(".fbx/");
+	if (objPos == std::string::npos) {
+		objPos = pathStr.find(".fbx/");
+	}
+
 	if (objPos != std::string::npos) {
 		fs::path modelFile = pathStr.substr(0, objPos + 4);
 		fs::path texturePart = pathStr.substr(objPos + 5);
 		fullPath = modelFile.parent_path() / texturePart;
 	}
+	
 	fullPath = fullPath.make_preferred();
 	std::string finalPath = fullPath.string();
 

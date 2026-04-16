@@ -8,39 +8,46 @@ namespace Input {
 
 	class UserInput {
 	public:
-
-		void OnEvent(Core::Event& e) {
-			Core::EventDispatcher dispatcher(e);
+		void OnEvent(Core::Event& event) {
+			Core::EventDispatcher dispatcher(event);
 
 			dispatcher.Dispatch<Core::KeyPressedEvent>(
 				[this](Core::KeyPressedEvent& event) {
 					int key = event.GetKeycode();
-					if (key >= 0 && key < 256)
+					if (key >= 0 && key < 256) {
 						m_Keys[key] = true;
+					}
+
 					return false;
 				});
 
 			dispatcher.Dispatch<Core::KeyReleasedEvent>(
 				[this](Core::KeyReleasedEvent& event) {
 					int key = event.GetKeycode();
-					if (key >= 0 && key < 256)
+					if (key >= 0 && key < 256) {
 						m_Keys[key] = false;
+					}
+
 					return false;
 				});
 
 			dispatcher.Dispatch<Core::MouseButtonPressedEvent>(
 				[this](Core::MouseButtonPressedEvent& event) {
 					int button = event.GetMouseButton();
-					if (button < 8)
+					if (button < 8) {
 						m_MouseButtons[button] = true;
+					}
+
 					return false;
 				});
 
 			dispatcher.Dispatch<Core::MouseButtonReleasedEvent>(
 				[this](Core::MouseButtonReleasedEvent& event) {
 					int button = event.GetMouseButton();
-					if (button < 8)
+					if (button < 8) {
 						m_MouseButtons[button] = false;
+					}
+					
 					return false;
 				});
 
@@ -59,10 +66,9 @@ namespace Input {
 		}
 
 		void EndFrame() {
-			m_MouseDelta = {0.f, 0.f};
+			m_MouseDelta = { 0.f, 0.f };
 		}
 
-	public:
 		bool IsKeyHeld(int keycode) const noexcept {
 			if (keycode < 0 || keycode >= 256) {
 				return false;

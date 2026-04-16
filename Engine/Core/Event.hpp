@@ -10,7 +10,7 @@ namespace Core {
 		MouseButtonPressed, MouseButtonReleased, MouseMoved, MouseScrolled
 	};
 
-#define BIT(x) (1 << x)
+	#define BIT(x) (1 << x)
 
 	enum class EventCategory : uint32_t {
 		None                    = 0,
@@ -42,7 +42,7 @@ namespace Core {
 
 	class Event {
 	public:
-		bool Handled{ false };
+		bool Handled { false };
 
 		virtual ~Event() {}
 

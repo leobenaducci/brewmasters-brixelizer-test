@@ -13,8 +13,10 @@ struct SceneConstants {
 	DirectX::XMFLOAT4X4 model{};
 	DirectX::XMFLOAT4X4 view{};
 	DirectX::XMFLOAT4X4 proj{};
-	DirectX::XMFLOAT3   lightPos{};  float _pad0{};
-	DirectX::XMFLOAT3   cameraPos{}; float _pad1{};
+	DirectX::XMFLOAT3   lightPos{};  
+	float _pad0{};
+	DirectX::XMFLOAT3   cameraPos{}; 
+	float _pad1{};
 };
 
 class SceneBuilder {

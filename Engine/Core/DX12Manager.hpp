@@ -75,11 +75,11 @@ public:
 		WaitForPreviousFrame();
 	}
 
-	uint32_t GetCurrentBackBufferIndex()       const noexcept { return m_SwapChain->GetCurrentBackBufferIndex(); }
-	ID3D12Device* const GetDevice()            const noexcept { return m_Device.Get(); }
+	uint32_t GetCurrentBackBufferIndex() const noexcept { return m_SwapChain->GetCurrentBackBufferIndex(); }
+	ID3D12Device* const GetDevice() const noexcept { return m_Device.Get(); }
 	ID3D12GraphicsCommandList* const GetCommandList() const noexcept { return m_CommandList.Get(); }
 	ID3D12CommandQueue* const GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
-	ID3D12DescriptorHeap* const GetSrvHeap()   const noexcept { return m_SrvDescriptorHeap.Get(); }
+	ID3D12DescriptorHeap* const GetSrvHeap() const noexcept { return m_SrvDescriptorHeap.Get(); }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTV() {
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -93,7 +93,9 @@ public:
 
 	void FlushGPU() {
 		m_FenceValue++;
+		
 		DX_THROW(m_CommandQueue->Signal(m_Fence.Get(), m_FenceValue));
+
 		if (m_Fence->GetCompletedValue() < m_FenceValue) {
 			DX_THROW(m_Fence->SetEventOnCompletion(m_FenceValue, m_FenceEvent));
 			WaitForSingleObject(m_FenceEvent, INFINITE);
@@ -115,7 +117,7 @@ private:
 		DX_THROW(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&m_Factory)));
 		
 		ComPtr<IDXGIAdapter1> bestAdapter;
-		DXGI_ADAPTER_DESC1 bestDesc = {};
+		DXGI_ADAPTER_DESC1 bestDesc{};
 		SIZE_T maxVram = 0;
 
 		ComPtr<IDXGIAdapter1> adapter;
@@ -159,34 +161,34 @@ private:
 		}
 #endif
 
-		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		D3D12_COMMAND_QUEUE_DESC queueDesc{};
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		DX_THROW(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_CommandQueue)));
 		m_CommandQueue->SetName(L"Main Command Queue");
 
 		RECT rect;
 		GetClientRect(hwnd, &rect);
-		DXGI_SWAP_CHAIN_DESC1 sd = {};
-		sd.BufferCount = FrameCount;
-		sd.Width = static_cast<UINT>(rect.right - rect.left);
-		sd.Height = static_cast<UINT>(rect.bottom - rect.top);
-		sd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		sd.SampleDesc.Count = 1;
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+		swapChainDesc.BufferCount = FrameCount;
+		swapChainDesc.Width = static_cast<UINT>(rect.right - rect.left);
+		swapChainDesc.Height = static_cast<UINT>(rect.bottom - rect.top);
+		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+		swapChainDesc.SampleDesc.Count = 1;
 
-		ComPtr<IDXGISwapChain1> sc1;
-		DX_THROW(m_Factory->CreateSwapChainForHwnd(m_CommandQueue.Get(), hwnd, &sd, nullptr, nullptr, &sc1));
-		DX_THROW(sc1.As(&m_SwapChain));
+		ComPtr<IDXGISwapChain1> swapChain{};
+		DX_THROW(m_Factory->CreateSwapChainForHwnd(m_CommandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, &swapChain));
+		DX_THROW(swapChain.As(&m_SwapChain));
 		m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 
-		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
 		rtvHeapDesc.NumDescriptors = FrameCount;
 		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		DX_THROW(m_Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap)));
 		m_RtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
 		srvHeapDesc.NumDescriptors = 1024; 
 		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;

@@ -244,7 +244,7 @@ namespace Brixelizer {
 			BRIX_LOGF("Scratch realloc: %zu -> %zu bytes", m_ScratchBufferSize, scratchSize);
 			m_ScratchBuffer      = CreateCommittedBuffer(device, scratchSize, D3D12_RESOURCE_STATE_COMMON);
 			m_ScratchBufferSize  = scratchSize;
-			m_ScratchBufferState = D3D12_RESOURCE_STATE_COMMON; // buffers always land in COMMON
+			m_ScratchBufferState = D3D12_RESOURCE_STATE_COMMON;
 
 			if (m_ScratchBuffer) {
 				m_ScratchBuffer->SetName(L"Brixelizer_Scratch");

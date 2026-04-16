@@ -35,6 +35,15 @@ public:
 			  ID3D12DescriptorHeap* const srvHeap,
 			  UINT const descriptorSize
 	) const {
+		if (m_TextureIndex != -1) {
+			// Obtain memory address of descriptors.
+			CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(srvHeap->GetGPUDescriptorHandleForHeapStart());
+
+			// Offset to mesh texture.
+			srvHandle.Offset(m_TextureIndex, descriptorSize);
+			cmdList->SetGraphicsRootDescriptorTable(1, srvHandle); 
+		}
+
 		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		cmdList->IASetVertexBuffers(0, 1, &m_VertexView);
 		cmdList->IASetIndexBuffer(&m_IndexView);

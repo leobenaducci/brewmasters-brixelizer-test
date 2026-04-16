@@ -38,7 +38,7 @@ public:
 	}
 
 	explicit Window(std::string_view title = "DX12 Engine", int width = 1280, int height = 720) {
-		WNDCLASSEXW wc = {};
+		WNDCLASSEXW wc{};
 		wc.cbSize        = sizeof(wc);
 		wc.style         = CS_CLASSDC;
 		wc.lpfnWndProc   = WndProc;

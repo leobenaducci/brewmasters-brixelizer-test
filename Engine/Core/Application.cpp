@@ -21,7 +21,7 @@ namespace Core {
 	void Application::Run() {
 		m_IsRunning = true;
 
-		MSG msg {};
+		MSG msg{};
 		while (msg.message != WM_QUIT && m_IsRunning) {
 			if (PeekMessage(&msg, nullptr, 0u, 0u, PM_REMOVE)) {
 				TranslateMessage(&msg);
@@ -39,7 +39,10 @@ namespace Core {
 	void Application::RaiseEvent(Event& event) {
 		for (auto& layer : std::views::reverse(m_LayerStack)) {
 			layer->OnEvent(event);
-			if (event.Handled) break;
+
+			if (event.Handled) {
+				break;
+			} 
 		}
 	}
 
@@ -53,16 +56,22 @@ namespace Core {
 	}
 
 	float Application::GetTime() {
+		assert(false && "Not implemented.");
 		return 0.0f;
 	}
 
 	void Application::DoFrame() {
+		// Update Loop --------------------------------------------------------
 		float deltaTime = m_Timer.GetDeltaTime();
 
 		for (auto const& layer : m_LayerStack) {
 			layer->OnUpdate(deltaTime);
 		}
+		// --------------------------------------------------------------------
 
+
+
+		// Render Loop --------------------------------------------------------
 		m_Graphics.BeginFrame();
 
 		for (auto const& layer : m_LayerStack) {
@@ -73,8 +82,11 @@ namespace Core {
 		m_Imgui.Render(m_Graphics.GetCommandList());
 
 		m_Graphics.Present();
+		// --------------------------------------------------------------------
 
-		// Layers transitioning.
+
+
+		// Layers transitioning -----------------------------------------------
 		for (auto& [from, to] : m_PendingTransitions) {
 			for (auto& layer : m_LayerStack) {
 				if (layer.get() == from) {
@@ -85,5 +97,6 @@ namespace Core {
 		}
 
 		m_PendingTransitions.clear();
+		// --------------------------------------------------------------------
 	}
 }

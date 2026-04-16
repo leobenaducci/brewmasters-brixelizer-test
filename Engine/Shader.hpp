@@ -7,6 +7,7 @@
 #include <vector>
 #include <Plugins/DirectX/d3dx12_core.h>
 #include <Plugins/DirectX/d3dx12.h>
+#include <Scene/SceneBuilder.hpp>
 
 #include "DXException.hpp"
 
@@ -14,15 +15,16 @@ using Microsoft::WRL::ComPtr;
 
 class Shader {
 public:
-	Shader(ID3D12Device* device, const std::wstring& path) {
-		CD3DX12_DESCRIPTOR_RANGE range;
-		range.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // b0.
-
-		CD3DX12_DESCRIPTOR_RANGE texRange;
-		texRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // texture in t0.
-
+	Shader(ID3D12Device* device, std::wstring const& path) {
 		CD3DX12_ROOT_PARAMETER rootParameters[2];
-		rootParameters[0].InitAsConstants(56, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
+		// cbuffer b0.
+		rootParameters[0].InitAsConstants(sizeof(SceneConstants) / 4, 0);
+
+		// texture t0.
+		CD3DX12_DESCRIPTOR_RANGE texRange{};
+		texRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+
 		rootParameters[1].InitAsDescriptorTable(1, &texRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 		// Static sampler. (static because is defined in the root signature).
@@ -42,7 +44,7 @@ public:
 		CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc;
 		rootSigDesc.Init(_countof(rootParameters), rootParameters, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-		ComPtr<ID3DBlob> signature, error;
+		ComPtr<ID3DBlob> signature{}, error{};
 		HRESULT hrSig = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
 		
 		if (FAILED(hrSig)) {
@@ -97,7 +99,7 @@ public:
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(psBlob.Get());
 		
 		psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-		psoDesc.RasterizerState.FrontCounterClockwise = TRUE; // CW or CCW rendering.
+		psoDesc.RasterizerState.FrontCounterClockwise = FALSE; // CW or CCW rendering.
 		
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 		psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -118,7 +120,7 @@ public:
 	}
 
 	void Bind(ID3D12GraphicsCommandList* cmdList) {
-		assert(m_PSO && "PSO is null — was Shader::Compile() called and did it succeed?");
+		assert(m_PSO && "PSO is null, was Shader::Compile() called?");
 		
 		if (m_PSO && m_RootSignature) {
 			cmdList->SetGraphicsRootSignature(m_RootSignature.Get());
@@ -127,6 +129,6 @@ public:
 	}
 
 private:
-	ComPtr<ID3D12RootSignature> m_RootSignature;
-	ComPtr<ID3D12PipelineState> m_PSO;
+	ComPtr<ID3D12RootSignature> m_RootSignature{};
+	ComPtr<ID3D12PipelineState> m_PSO{};
 };
