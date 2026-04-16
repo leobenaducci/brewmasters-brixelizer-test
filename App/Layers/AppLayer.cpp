@@ -52,7 +52,7 @@ void AppLayer::OnRender() {
 	D3D12_VIEWPORT viewport { 0, 0, FWIDTH, FHEIGHT, 0.0f, 1.0f };
 	D3D12_RECT scissor { 0, 0, (LONG)WIDTH, (LONG)HEIGHT };
 
-	auto rtv = app.GetDX().GetCurrentRTV();
+	auto rtv = app.GetDX().GetCurrentRTV(); // TODO: PASARLE ESTO AL DEBUG VISUALIZATION DE BRIXELIZER SARA DEL FUTURO PLSSSSS.
 	auto dsv = app.GetDX().GetDepthStencilView();
 
 	constexpr float clearColor[] = { 0.7f, 0.1f, 0.9f, 1.0f };

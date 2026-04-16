@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include <FidelityFX/host/ffx_brixelizer.h>
 
+#include "Camera.hpp"
 #include "FfxContext.hpp"
 #include <Mesh.hpp>
 
@@ -29,7 +30,7 @@ namespace Brixelizer {
 		void Update(
 			ID3D12Device* device, 
 			uint32_t swapChainFrameIndex,
-			DirectX::XMFLOAT3 cameraPosition,
+			Camera const& camera,
 			ID3D12GraphicsCommandList* cmdList
 		);
 
@@ -47,6 +48,11 @@ namespace Brixelizer {
 	private:
 		void UnregisterBuffer(uint32_t bufferID);
 		void DeleteMeshInstance(uint32_t meshInstanceId);
+		FfxBrixelizerDebugVisualizationDescription BuildDebugVisualization(
+			Camera const& camera,
+			ID3D12GraphicsCommandList* const cmdList
+		) noexcept;
+	private:
 
 		static constexpr FfxSurfaceFormat VERTEX_FORMAT { FFX_SURFACE_FORMAT_R32G32B32_FLOAT };
 
@@ -67,13 +73,21 @@ namespace Brixelizer {
 		CascadeResources m_CascadeResources[FFX_BRIXELIZER_MAX_CASCADES] {};
 		uint32_t         m_CascadeResourcesCount {};
 
-		Microsoft::WRL::ComPtr<ID3D12Resource> m_ScratchBuffer    {};
+		Microsoft::WRL::ComPtr<ID3D12Resource> m_ScratchBuffer {};
 		size_t                                 m_ScratchBufferSize {};
 		D3D12_RESOURCE_STATES m_ScratchBufferState = D3D12_RESOURCE_STATE_COMMON;
 
 		FfxBrixelizerUpdateDescription      m_UpdateDesc {};
 		FfxBrixelizerBakedUpdateDescription m_BakedDesc  {};
 		FfxBrixelizerStats                  m_Stats      {};
+		
+		// For Debug Visualization:
+		float m_TMin { 0.0f };
+    	float m_TMax { 10000.0f };
+		float m_SdfSolveEps { 0.5f };
+
+		uint32_t m_StartCascadeIdx = { 0 };
+    	uint32_t m_EndCascadeIdx = { NUM_BRIXELIZER_CASCADES - 1 };
 
 	};
 

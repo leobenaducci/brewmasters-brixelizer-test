@@ -181,7 +181,7 @@ namespace Brixelizer {
 	void BrixelizerContext::Update(
 		ID3D12Device* const device,
 		uint32_t const swapChainFrameIndex,
-		DirectX::XMFLOAT3 const cameraPosition,
+		Camera const& camera,
 		ID3D12GraphicsCommandList* const cmdList
 	) {
 		m_Stats      = FfxBrixelizerStats{};
@@ -189,13 +189,14 @@ namespace Brixelizer {
 		m_BakedDesc  = {};
 		size_t scratchSize {};
 
-		m_UpdateDesc.frameIndex        = swapChainFrameIndex;
-		m_UpdateDesc.sdfCenter[0]      = cameraPosition.x;
-		m_UpdateDesc.sdfCenter[1]      = cameraPosition.y;
-		m_UpdateDesc.sdfCenter[2]      = cameraPosition.z;
-		m_UpdateDesc.maxReferences     = 32 * (1 << 20);
-		m_UpdateDesc.triangleSwapSize  = 300 * (1 << 20);
-		m_UpdateDesc.maxBricksPerBake  = 1 << 14;
+		DirectX::XMFLOAT3 cameraPosition = camera.GetPosition();
+		m_UpdateDesc.frameIndex       = swapChainFrameIndex;
+		m_UpdateDesc.sdfCenter[0]     = cameraPosition.x;
+		m_UpdateDesc.sdfCenter[1]     = cameraPosition.y;
+		m_UpdateDesc.sdfCenter[2]     = cameraPosition.z;
+		m_UpdateDesc.maxReferences    = 32 * (1 << 20);
+		m_UpdateDesc.triangleSwapSize = 300 * (1 << 20);
+		m_UpdateDesc.maxBricksPerBake = 1 << 14;
 
 		FfxResourceDescription const atlasDesc = {
 			.type   = FFX_RESOURCE_TYPE_TEXTURE3D,
@@ -238,6 +239,9 @@ namespace Brixelizer {
 
 		FfxErrorCode const bakeErr = ffxBrixelizerBakeUpdate(&m_BrixelizerContext, &m_UpdateDesc, &m_BakedDesc);
 		assert(bakeErr == FFX_OK);
+		
+		m_UpdateDesc.debugVisualizationDesc = &BuildDebugVisualization(camera, cmdList);
+		m_UpdateDesc.populateDebugAABBsFlags = (FfxBrixelizerPopulateDebugAABBsFlags)(FFX_BRIXELIZER_POPULATE_AABBS_STATIC_INSTANCES);
 
 		bool const scratchReallocated = (scratchSize > m_ScratchBufferSize);
 		if (scratchReallocated) {
@@ -296,6 +300,38 @@ namespace Brixelizer {
 
 		m_SdfAtlasState      = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 		m_ScratchBufferState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	}
+
+	FfxBrixelizerDebugVisualizationDescription BrixelizerContext::BuildDebugVisualization(
+		Camera const& camera,
+		ID3D12GraphicsCommandList* const cmdList
+	) noexcept {
+		FfxBrixelizerDebugVisualizationDescription debugVisDesc{};
+		
+		debugVisDesc.debugState = FFX_BRIXELIZER_TRACE_DEBUG_MODE_DISTANCE; // SDF Debug.
+		
+		DirectX::XMMATRIX const& inverseView = camera.GetInverseViewMatrix();
+		DirectX::XMMATRIX const& inverseProjection = camera.GetInverseProjectionMatrix();
+
+		memcpy(&debugVisDesc.inverseViewMatrix, &inverseView, sizeof(debugVisDesc.inverseViewMatrix));
+    	memcpy(&debugVisDesc.inverseProjectionMatrix, &inverseProjection, sizeof(debugVisDesc.inverseProjectionMatrix));
+		
+		debugVisDesc.tMin        = m_TMin;
+		debugVisDesc.tMax        = m_TMax;
+		debugVisDesc.sdfSolveEps = m_SdfSolveEps;
+		
+		debugVisDesc.startCascadeIndex = m_StartCascadeIdx; // Static instances.
+    	debugVisDesc.endCascadeIndex   = m_EndCascadeIdx;
+
+		debugVisDesc.renderWidth  = 1280; // DEBUG
+    	debugVisDesc.renderHeight = 720;
+
+		debugVisDesc.commandList = ffxGetCommandListDX12(cmdList);
+		debugVisDesc.cascadeDebugAABB[2 * NUM_BRIXELIZER_CASCADES + (NUM_BRIXELIZER_CASCADES - 1)] = FFX_BRIXELIZER_CASCADE_DEBUG_AABB_AABB_TREE;
+
+		debugVisDesc.output = {};
+
+		return debugVisDesc;
 	}
 
 } // namespace Brixelizer

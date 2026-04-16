@@ -28,8 +28,8 @@ public:
 			CreateDepthBuffer(windowHandle);
 			
 			DX_THROW(m_CommandList->Close());
-			ID3D12CommandList* const ppCommandLists[] = { m_CommandList.Get() };
-			m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+			ID3D12CommandList* const commandLists[] = { m_CommandList.Get() };
+			m_CommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 			
 			FlushGPU();
 			
@@ -63,8 +63,8 @@ public:
 						D3D12_RESOURCE_STATE_PRESENT);
 		
 		DX_THROW(m_CommandList->Close());
-		ID3D12CommandList* const ppCommandLists[] = { m_CommandList.Get() };
-		m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+		ID3D12CommandList* const commandLists[] = { m_CommandList.Get() };
+		m_CommandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
 		HRESULT const hr = m_SwapChain->Present(1, 0);
 		if (FAILED(hr)) {

@@ -4,13 +4,13 @@
 
 class Camera {
 public:
-	Camera(DirectX::XMFLOAT3 pos = {0,0,-5})
+	Camera(DirectX::XMFLOAT3 pos = { 0.0f, 0.0f, -5.0f })
 		: m_Position(pos) 
 	{
 		UpdateVectors();
 	}
 
-	void Move(float forward, float strafe, float upDown, float deltaTime) {
+	void Move(float forward, float strafe, float upDown, float deltaTime) noexcept {
 		using namespace DirectX;
 
 		float speed = m_MoveSpeed * deltaTime;
@@ -30,7 +30,7 @@ public:
 		XMStoreFloat3(&m_Position, pos);
 	}
 
-	void Rotate(float dx, float dy) {
+	void Rotate(float dx, float dy) noexcept {
 		m_Yaw   += dx * m_MouseSensitivity;
 		m_Pitch -= dy * m_MouseSensitivity;
 
@@ -40,7 +40,7 @@ public:
 		UpdateVectors();
 	}
 
-	DirectX::XMMATRIX GetViewMatrix() const {
+	DirectX::XMMATRIX GetViewMatrix() const noexcept {
 		return DirectX::XMMatrixLookToLH(
 			XMLoadFloat3(&m_Position),
 			XMLoadFloat3(&m_Forward),
@@ -48,7 +48,7 @@ public:
 		);
 	}
 
-	DirectX::XMMATRIX GetProjectionMatrix() const {
+	DirectX::XMMATRIX GetProjectionMatrix() const noexcept {
 		return DirectX::XMMatrixPerspectiveFovLH(
 			m_FovY,
 			m_AspectRatio,
@@ -57,7 +57,27 @@ public:
 		);
 	}
 
-	void SetAspectRatio(float aspect) {
+	DirectX::XMMATRIX GetInverseViewMatrix() const noexcept {
+		DirectX::XMVECTOR pos = XMLoadFloat3(&m_Position);
+		DirectX::XMVECTOR forward = XMLoadFloat3(&m_Forward);
+		DirectX::XMVECTOR up = XMLoadFloat3(&m_Up);
+
+		DirectX::XMVECTOR right = DirectX::XMVector3Cross(up, forward);
+
+		return DirectX::XMMATRIX(
+			right,
+			up,
+			forward,
+			pos
+		);
+	}
+
+	DirectX::XMMATRIX GetInverseProjectionMatrix() const noexcept {
+		DirectX::XMMATRIX projection = GetProjectionMatrix();
+		return DirectX::XMMatrixInverse(nullptr, projection);
+	}
+
+	void SetAspectRatio(float aspect) noexcept {
 		m_AspectRatio = aspect;
 	}
 
@@ -66,7 +86,7 @@ public:
 	}
 
 private:
-	void UpdateVectors() {
+	void UpdateVectors() noexcept {
 		using namespace DirectX;
 
 		float cp = cosf(m_Pitch);
