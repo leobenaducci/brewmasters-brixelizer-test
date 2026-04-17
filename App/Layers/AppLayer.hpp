@@ -10,6 +10,7 @@
 #include <Camera.hpp>
 #include <Input/UserInput.hpp>
 #include <Scene/SceneBuilder.hpp>
+#include <Brixelizer/BrixelizerContext.hpp>
 
 #include "../Game/PlayerController.hpp"
 
@@ -23,11 +24,13 @@ public:
     void OnEvent(Core::Event& event);
 
 private:
-    std::unique_ptr<Shader> m_Shader;
+    std::unique_ptr<Shader> m_LightingShader;
 
     Camera           m_Camera;
     SceneBuilder     m_SceneBuilder;
     Input::UserInput m_Input;
     PlayerController m_PlayerController;
     Model            m_Model;
+    std::unique_ptr<Brixelizer::BrixelizerContext> m_BrixelizerContext;
+    std::vector<Brixelizer::MeshInstance> m_BrixelizerMeshInstances{};
 };

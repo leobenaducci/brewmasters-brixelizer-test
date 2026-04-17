@@ -99,6 +99,7 @@ namespace Brixelizer {
 		assert(error == FFX_OK);
 	}
 
+	[[nodiscard]]
 	MeshInstance BrixelizerContext::SubmitMeshInstance(Mesh const& mesh) {
 		FfxBrixelizerInstanceDescription instanceDesc {};
 		FfxBrixelizerInstanceID instanceID = FFX_BRIXELIZER_INVALID_ID;
@@ -182,7 +183,8 @@ namespace Brixelizer {
 		ID3D12Device* const device,
 		uint32_t const swapChainFrameIndex,
 		Camera const& camera,
-		ID3D12GraphicsCommandList* const cmdList
+		ID3D12GraphicsCommandList* const cmdList,
+		ID3D12Resource* renderTarget
 	) {
 		m_Stats      = FfxBrixelizerStats{};
 		m_UpdateDesc = {};
@@ -240,7 +242,8 @@ namespace Brixelizer {
 		FfxErrorCode const bakeErr = ffxBrixelizerBakeUpdate(&m_BrixelizerContext, &m_UpdateDesc, &m_BakedDesc);
 		assert(bakeErr == FFX_OK);
 		
-		m_UpdateDesc.debugVisualizationDesc = &BuildDebugVisualization(camera, cmdList);
+		auto debugVisualizationDesc = BuildDebugVisualization(camera, cmdList, renderTarget);
+		m_UpdateDesc.debugVisualizationDesc = &debugVisualizationDesc;
 		m_UpdateDesc.populateDebugAABBsFlags = (FfxBrixelizerPopulateDebugAABBsFlags)(FFX_BRIXELIZER_POPULATE_AABBS_STATIC_INSTANCES);
 
 		bool const scratchReallocated = (scratchSize > m_ScratchBufferSize);
@@ -304,7 +307,8 @@ namespace Brixelizer {
 
 	FfxBrixelizerDebugVisualizationDescription BrixelizerContext::BuildDebugVisualization(
 		Camera const& camera,
-		ID3D12GraphicsCommandList* const cmdList
+		ID3D12GraphicsCommandList* const cmdList,
+		ID3D12Resource* renderTarget
 	) noexcept {
 		FfxBrixelizerDebugVisualizationDescription debugVisDesc{};
 		
@@ -327,9 +331,16 @@ namespace Brixelizer {
     	debugVisDesc.renderHeight = 720;
 
 		debugVisDesc.commandList = ffxGetCommandListDX12(cmdList);
-		debugVisDesc.cascadeDebugAABB[2 * NUM_BRIXELIZER_CASCADES + (NUM_BRIXELIZER_CASCADES - 1)] = FFX_BRIXELIZER_CASCADE_DEBUG_AABB_AABB_TREE;
+		debugVisDesc.cascadeDebugAABB[2 * FFX_BRIXELIZER_MAX_CASCADES + (FFX_BRIXELIZER_MAX_CASCADES - 1)] = FFX_BRIXELIZER_CASCADE_DEBUG_AABB_AABB_TREE;
 
-		debugVisDesc.output = {};
+		FfxResourceDescription renderTargetDesc = ffxGetResourceDescriptionDX12(renderTarget, FFX_RESOURCE_USAGE_UAV);
+
+		debugVisDesc.output = ffxGetResourceDX12(
+			renderTarget, 
+			renderTargetDesc,
+			L"Brixelizer Debug Visualization Output", 
+			FFX_RESOURCE_STATE_UNORDERED_ACCESS
+		);
 
 		return debugVisDesc;
 	}

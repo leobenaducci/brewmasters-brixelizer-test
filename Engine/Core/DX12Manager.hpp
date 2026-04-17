@@ -18,7 +18,7 @@ using Microsoft::WRL::ComPtr;
 
 class DX12Manager {
 public:
-	static const UINT FrameCount = 2;
+	static const UINT FRAME_COUNT = 2; // Double Buffering.
 
 	DX12Manager(HWND const windowHandle) {
 		std::cout << "[Engine] Initializing DX12 Pipeline with double buffering..." << std::endl;
@@ -76,14 +76,17 @@ public:
 	}
 
 	uint32_t GetCurrentBackBufferIndex() const noexcept { return m_SwapChain->GetCurrentBackBufferIndex(); }
+	UINT GetCurrentSwapChainFrameIndex() const noexcept { return m_FrameIndex; }
 	ID3D12Device* const GetDevice() const noexcept { return m_Device.Get(); }
 	ID3D12GraphicsCommandList* const GetCommandList() const noexcept { return m_CommandList.Get(); }
 	ID3D12CommandQueue* const GetCommandQueue() const noexcept { return m_CommandQueue.Get(); }
 	ID3D12DescriptorHeap* const GetSrvHeap() const noexcept { return m_SrvDescriptorHeap.Get(); }
+	ComPtr<ID3D12Resource> GetCurrentRenderTarget() const noexcept { return m_RenderTargets[m_FrameIndex]; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCurrentRTV() {
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
 		handle.ptr += static_cast<SIZE_T>(m_FrameIndex) * m_RtvDescriptorSize;
+		
 		return handle;
 	}
 
@@ -169,7 +172,7 @@ private:
 		RECT rect;
 		GetClientRect(hwnd, &rect);
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-		swapChainDesc.BufferCount = FrameCount;
+		swapChainDesc.BufferCount = FRAME_COUNT;
 		swapChainDesc.Width = static_cast<UINT>(rect.right - rect.left);
 		swapChainDesc.Height = static_cast<UINT>(rect.bottom - rect.top);
 		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -183,7 +186,7 @@ private:
 		m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 
 		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-		rtvHeapDesc.NumDescriptors = FrameCount;
+		rtvHeapDesc.NumDescriptors = FRAME_COUNT;
 		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		DX_THROW(m_Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap)));
 		m_RtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -196,7 +199,7 @@ private:
 	}
 
 	void InitAssets() {
-		for (UINT n = 0; n < FrameCount; n++) {
+		for (UINT n = 0; n < FRAME_COUNT; n++) {
 			DX_THROW(m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CommandAllocators[n])));
 			
 			std::wstring const name = L"Command Allocator " + std::to_wstring(n);
@@ -207,7 +210,7 @@ private:
 		m_CommandList->SetName(L"Main Command List");
 
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_RtvHeap->GetCPUDescriptorHandleForHeapStart();
-		for (UINT n = 0; n < FrameCount; n++) {
+		for (UINT n = 0; n < FRAME_COUNT; n++) {
 			DX_THROW(m_SwapChain->GetBuffer(n, IID_PPV_ARGS(&m_RenderTargets[n])));
 			m_Device->CreateRenderTargetView(m_RenderTargets[n].Get(), nullptr, rtvHandle);
 			
@@ -291,9 +294,9 @@ private:
 	ComPtr<ID3D12CommandQueue> m_CommandQueue;
 	ComPtr<IDXGISwapChain3> m_SwapChain;
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
-	ComPtr<ID3D12Resource> m_RenderTargets[FrameCount];
+	ComPtr<ID3D12Resource> m_RenderTargets[FRAME_COUNT];
 	
-	ComPtr<ID3D12CommandAllocator> m_CommandAllocators[FrameCount];
+	ComPtr<ID3D12CommandAllocator> m_CommandAllocators[FRAME_COUNT];
 	
 	ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 	ComPtr<ID3D12Resource> m_DepthBuffer;

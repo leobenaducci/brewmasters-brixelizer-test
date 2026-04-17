@@ -21,8 +21,8 @@ namespace Brixelizer {
 		BrixelizerContext(ID3D12Device* device, ID3D12CommandQueue* cmdQueue);
 		~BrixelizerContext();
 
-		BrixelizerContext(const BrixelizerContext&)            = delete;
-		BrixelizerContext& operator=(const BrixelizerContext&) = delete;
+		BrixelizerContext(BrixelizerContext const&)            = delete;
+		BrixelizerContext& operator=(BrixelizerContext const&) = delete;
 
 		MeshInstance SubmitMeshInstance(Mesh const& mesh);
 		void UnloadMeshInstance(MeshInstance const& meshInstance);
@@ -31,7 +31,8 @@ namespace Brixelizer {
 			ID3D12Device* device, 
 			uint32_t swapChainFrameIndex,
 			Camera const& camera,
-			ID3D12GraphicsCommandList* cmdList
+			ID3D12GraphicsCommandList* cmdList,
+			ID3D12Resource* renderTarget
 		);
 
 		ID3D12Resource*  GetSdfAtlas()    const noexcept { return m_SdfAtlas.Get(); }
@@ -39,18 +40,21 @@ namespace Brixelizer {
 		FfxInterface     GetFfxInterface()      noexcept { return m_FfxContext.GetFfxInterface(); }
 		FfxBrixelizerContext* GetFfxBrixelizerContext() noexcept { return &m_BrixelizerContext; }
 
-		ID3D12Resource** GetCascadeAABBTrees() { return nullptr; }
-		ID3D12Resource** GetCascadeBrickMaps() { return nullptr; }
+		ID3D12Resource** GetCascadeAABBTrees() { assert(false && "Not Implemented."); return nullptr; }
+		ID3D12Resource** GetCascadeBrickMaps() { assert(false && "Not Implemented."); return nullptr; }
 
 	public:
 		static constexpr uint32_t MAX_CASCADES  { FFX_BRIXELIZER_MAX_CASCADES / 3 };
 
 	private:
 		void UnregisterBuffer(uint32_t bufferID);
+
 		void DeleteMeshInstance(uint32_t meshInstanceId);
+
 		FfxBrixelizerDebugVisualizationDescription BuildDebugVisualization(
 			Camera const& camera,
-			ID3D12GraphicsCommandList* const cmdList
+			ID3D12GraphicsCommandList* const cmdList,
+			ID3D12Resource* renderTarget
 		) noexcept;
 	private:
 
@@ -86,8 +90,8 @@ namespace Brixelizer {
     	float m_TMax { 10000.0f };
 		float m_SdfSolveEps { 0.5f };
 
-		uint32_t m_StartCascadeIdx = { 0 };
-    	uint32_t m_EndCascadeIdx = { NUM_BRIXELIZER_CASCADES - 1 };
+		uint32_t m_StartCascadeIdx { 0 };
+    	uint32_t m_EndCascadeIdx { FFX_BRIXELIZER_MAX_CASCADES - 1 };
 
 	};
 
