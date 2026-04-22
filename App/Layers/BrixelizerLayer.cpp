@@ -16,12 +16,12 @@ BrixelizerLayer::BrixelizerLayer() {
 	m_BrixelizerContext = std::make_unique<Brixelizer::BrixelizerContext>(device, cmdQueue);
 
 	m_LightingShader = std::make_unique<BrixelizerShader>(
-		device, L"D:\\projects\\brixelizer-test\\Engine\\Resources\\Shaders\\BrixelizerSDFVisualization.hlsl"
+		device, L"..\\Engine\\Resources\\Shaders\\BrixelizerSDFVisualization.hlsl"
 	);
 
 	app.GetDX().BeginFrame();
 
-	m_Model.Load(device, cmdList, srvHeap, "D:\\projects\\brixelizer-test\\Engine\\Resources\\Sponza\\sponza.obj");
+	m_Model.Load(device, cmdList, srvHeap, "..\\Engine\\Resources\\Sponza\\sponza.obj");
 
 	for (auto const& mesh : m_Model.GetMeshes()) {
 		m_BrixelizerMeshInstances.push_back(m_BrixelizerContext->SubmitMeshInstance(*mesh));

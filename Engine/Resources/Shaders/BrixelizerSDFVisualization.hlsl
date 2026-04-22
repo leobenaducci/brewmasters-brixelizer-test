@@ -1,6 +1,7 @@
 #define FFX_BRIXELIZER_TRAVERSAL_EPS 0.001f
 #define FFX_HLSL
 #define FFX_GPU
+#define FFX_WAVE
 #include "gpu/brixelizer/ffx_brixelizer_trace_ops.h"
 
 cbuffer SceneConstants : register(b0) {

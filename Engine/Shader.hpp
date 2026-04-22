@@ -1,6 +1,5 @@
 #pragma once
 #include <d3d12.h>
-#include <d3dcompiler.h>
 #include <wrl/client.h>
 #include <string>
 #include <iostream>
@@ -10,6 +9,7 @@
 #include <Scene/SceneBuilder.hpp>
 
 #include "DXException.hpp"
+#include "DXCShaderCompiler.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -59,30 +59,22 @@ public:
 		DX_THROW(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)));
 
 		// VS & PS compilation.
-		ComPtr<ID3DBlob> vsBlob, psBlob, errorBlob;
-		UINT compileFlags = 0;
-#if defined(_DEBUG)
-		compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
+		static DXCShaderCompiler dxc{};
 
-		// Vertex Shader.
-		HRESULT hrVS = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSMain", "vs_5_0", compileFlags, 0, &vsBlob, &errorBlob);
-		if (FAILED(hrVS)) {
-			if (errorBlob) {
-				std::cout << "VS Error: " << (char*)errorBlob->GetBufferPointer() << std::endl;
-			}
+		std::vector<std::wstring> includeDirs = {
+			L"G:/Brewmasters/brixelizer-test/Engine/Plugins/FidelityFX/include/FidelityFX/gpu/brixelizer",
+			L"G:/Brewmasters/brixelizer-test/Engine/Plugins/FidelityFX/include/FidelityFX/gpu",
+			L"G:/Brewmasters/brixelizer-test/Engine/Plugins/FidelityFX/include/FidelityFX",
+			L"G:/Brewmasters/FidelityFX-SDK-1.1.4/sdk/src/backends/dx12/shaders/brixelizer"
+		};
 
-			DX_THROW(hrVS);
-		}
-
-		// Pixel Shader.
-		HRESULT hrPS = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSMain", "ps_5_0", compileFlags, 0, &psBlob, &errorBlob);
-		if (FAILED(hrPS)) {
-			if (errorBlob) {
-				std::cout << "PS Error: " << (char*)errorBlob->GetBufferPointer() << std::endl;
-			}
-
-			DX_THROW(hrPS);
+		ComPtr<ID3DBlob> vsBlob, psBlob;
+		try {
+			vsBlob = dxc.Compile(path.c_str(), L"VSMain", L"vs_5_0", includeDirs);
+			psBlob = dxc.Compile(path.c_str(), L"PSMain", L"ps_5_0", includeDirs);
+		} catch (const std::exception& e) {
+			std::cout << "Shader compilation error: " << e.what() << std::endl;
+			DX_THROW(E_FAIL);
 		}
 
 		// Input Layout.

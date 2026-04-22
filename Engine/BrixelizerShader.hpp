@@ -1,6 +1,5 @@
 #pragma once
 #include <d3d12.h>
-#include <d3dcompiler.h>
 #include <wrl/client.h>
 #include <string>
 #include <iostream>
@@ -13,6 +12,7 @@
 #include <Plugins/FidelityFX/include/FidelityFX/gpu/brixelizer/ffx_brixelizer_host_gpu_shared.h>
 
 #include "DXException.hpp"
+#include "DXCShaderCompiler.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -95,32 +95,20 @@ private:
     }
 
     void CompileShaders(const std::wstring& path, ID3DBlob** vsBlob, ID3DBlob** psBlob) {
-        UINT compileFlags = 0;
-#if defined(_DEBUG)
-        compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#endif
+        static DXCShaderCompiler dxc{};
 
-        ComPtr<ID3DBlob> errorBlob{};
+        std::vector<std::wstring> includeDirs = {
+            L"../Engine/Plugins/FidelityFX/include/FidelityFX/gpu/brixelizer",
+            L"../Engine/Plugins/FidelityFX/include/FidelityFX/gpu",
+            L"../Engine/Plugins/FidelityFX/include/FidelityFX",
+        };
 
-        // Vertex Shader.
-        // TODO: SARA DEL FUTURO USA LA FUNCION QUE HICISTE en ShaderCompiler.
-        HRESULT hrVS = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "VSMain", "vs_5_0", compileFlags, 0, vsBlob, &errorBlob);
-        if (FAILED(hrVS)) {
-            if (errorBlob) {
-                std::cout << "VS Error: " << (char*)errorBlob->GetBufferPointer() << '\n';
-            }
-
-            DX_THROW(hrVS);
-        }
-
-        // Pixel Shader.
-        HRESULT hrPS = D3DCompileFromFile(path.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "PSMain", "ps_5_0", compileFlags, 0, psBlob, &errorBlob);
-        if (FAILED(hrPS)) {
-            if (errorBlob) {
-                std::cout << "PS Error: " << (char*)errorBlob->GetBufferPointer() << '\n';
-            }
-
-            DX_THROW(hrPS);
+        try {
+            *vsBlob = dxc.Compile(path.c_str(), L"VSMain", L"vs_6_6", includeDirs).Detach();
+            *psBlob = dxc.Compile(path.c_str(), L"PSMain", L"ps_6_6", includeDirs).Detach();
+        } catch (const std::exception& e) {
+            std::cout << "Shader compilation error: " << e.what() << '\n';
+            DX_THROW(E_FAIL);
         }
     }
 
