@@ -67,6 +67,8 @@ public:
 		scene.lightPosition  = camera.GetPosition();
 		scene.cameraPosition = camera.GetPosition();
 
+		memcpy(m_SceneConstantBufferMapped, &scene, sizeof(SceneConstants));
+
 		return scene;
 	}
 private:

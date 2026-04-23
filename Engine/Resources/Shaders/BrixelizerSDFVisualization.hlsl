@@ -36,11 +36,11 @@ struct CascadeInfoBuffer {
 
 ConstantBuffer<CascadeInfoBuffer> _BrixelizerCascadesInfo : register(b1);
 
-StructuredBuffer<uint> _AABBTrees  : register(t1);
-StructuredBuffer<uint> _BrickAABBs : register(t2);
-StructuredBuffer<uint> _BrickMaps  : register(t3);
+StructuredBuffer<uint> _AABBTrees  : register(t3);
+StructuredBuffer<uint> _BrickAABBs : register(t4);
+StructuredBuffer<uint> _BrickMaps  : register(t5);
 
-Texture3D<float> _SDFAtlasTex : register(t4);
+Texture3D<float> _SDFAtlasTex : register(t6);
 SamplerState _LinearClampSampler : register(s1);
 
 // Brixelixer HLSL API Implementation.
@@ -75,7 +75,7 @@ float3 ToGridSpace(float3 worldPos, uint cascadeIndex) {
 }
 // ------------------------------------------------
 
-Texture2D    _AlbedoTex : register(t0);
+Texture2D    _AlbedoTex : register(t2);
 SamplerState _Sampler   : register(s0);
 
 PSInput VSMain(VSInput input) {

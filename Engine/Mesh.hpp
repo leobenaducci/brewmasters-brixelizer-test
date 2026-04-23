@@ -41,7 +41,7 @@ public:
 
 			// Offset to mesh texture.
 			srvHandle.Offset(m_TextureIndex, descriptorSize);
-			cmdList->SetGraphicsRootDescriptorTable(1, srvHandle); 
+			cmdList->SetGraphicsRootDescriptorTable(2, srvHandle); 
 		}
 
 		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
